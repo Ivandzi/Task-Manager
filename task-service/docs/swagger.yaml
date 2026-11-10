@@ -1,0 +1,231 @@
+basePath: /
+definitions:
+  handler.TaskRequest:
+    properties:
+      description:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  repository.Tasks:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+host: localhost:8082
+info:
+  contact: {}
+  description: API for task management. Requires a JWT token from Auth Service.
+  title: Task Service API
+  version: "1.0"
+paths:
+  /tasks:
+    get:
+      description: Returns a list of tasks for the current user (with caching in Redis).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of tasks
+          schema:
+            items:
+              $ref: '#/definitions/repository.Tasks'
+            type: array
+        "401":
+          description: Unauthorized (no token)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a list of tasks
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Creates a task for an authorized user. The default status is “pending”.
+      parameters:
+      - description: Task data (title, description)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request (invalid JSON)
+          schema:
+            type: string
+        "401":
+          description: Unauthorized (no token)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      description: Deletes the task. Checks permissions (IDOR protection). Flushes
+        the cache in Redis.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request (invalid ID)
+          schema:
+            type: string
+        "401":
+          description: Unauthorized (no token)
+          schema:
+            type: string
+        "403":
+          description: Forbidden (someone else’s task)
+          schema:
+            type: string
+        "404":
+          description: Not Found (the task was not found)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete the task
+      tags:
+      - tasks
+    get:
+      description: Returns one task. Checks that the task belongs to the current user
+        (IDOR protection).
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача
+          schema:
+            $ref: '#/definitions/repository.Tasks'
+        "400":
+          description: Bad Request (invalid ID)
+          schema:
+            type: string
+        "401":
+          description: Unauthorized (no token)
+          schema:
+            type: string
+        "403":
+          description: Forbidden (someone else’s task)
+          schema:
+            type: string
+        "404":
+          description: Not Found (the task was not found)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a task by ID
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Updates the task. Checks permissions (IDOR protection). Flushes
+        the cache in Redis.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New task data (title, description, status)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request (invalid ID or JSON)
+          schema:
+            type: string
+        "401":
+          description: Unauthorized (no token)
+          schema:
+            type: string
+        "403":
+          description: Forbidden (someone else’s task)
+          schema:
+            type: string
+        "404":
+          description: Not Found (the task was not found)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update the task
+      tags:
+      - tasks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

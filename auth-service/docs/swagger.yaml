@@ -1,0 +1,75 @@
+basePath: /
+definitions:
+  handler.UserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: API for user registration and authentication (issuance of JWT tokens).
+  title: Auth Service API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the email and password, returns a JWT token (valid for
+        24 hours).
+      parameters:
+      - description: Login credentials (email, password)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            type: string
+        "400":
+          description: Bad Request (invalid JSON or invalid password)
+          schema:
+            type: string
+      summary: System login (obtaining JWT)
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user in the system. The password is hashed using
+        bcrypt.
+      parameters:
+      - description: Registration data (email, password)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request (invalid JSON or the user already exists)
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Registration of a new user
+      tags:
+      - auth
+swagger: "2.0"
